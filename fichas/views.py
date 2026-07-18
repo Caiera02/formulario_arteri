@@ -1,11 +1,27 @@
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth import logout
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.contrib.auth.views import LoginView, LogoutView
 from django.http import JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.views import View
 from django.views.generic import ListView, DetailView
 from .forms import FichaCadastralForm
 from .models import FichaCadastral, LogAuditoria
+
+
+class StaffRequiredMixin(UserPassesTestMixin):
+    """
+    Mixin para garantir que apenas usuários autenticados e que sejam
+    membros da equipe (staff) ou superusuários tenham acesso à view.
+    """
+    login_url = "fichas:login"
+
+    def test_func(self):
+        return (
+            self.request.user.is_authenticated 
+            and (self.request.user.is_staff or self.request.user.is_superuser)
+        )
+
 
 
 class FichaCadastralView(View):
@@ -59,15 +75,25 @@ class FichaCadastralLoginView(LoginView):
     redirect_authenticated_user = True
 
 
-class FichaCadastralLogoutView(LogoutView):
+class FichaCadastralLogoutView(View):
     """
     View baseada em classe para encerrar a sessão de corretores.
     """
 
-    next_page = "fichas:login"
+    def get(self, request, *args, **kwargs):
+        """Suporta logout via GET (comum em links)"""
+        logout(request)
+        return redirect("fichas:login")
+
+    def post(self, request, *args, **kwargs):
+        """Suporta logout via POST"""
+        logout(request)
+        return redirect("fichas:login")
 
 
-class FichaCadastralListView(LoginRequiredMixin, ListView):
+
+
+class FichaCadastralListView(StaffRequiredMixin, ListView):
     """
     View baseada em classe para listar e gerenciar todos os formulários
     enviados. Requer autenticação do usuário.
@@ -116,7 +142,7 @@ class FichaCadastralListView(LoginRequiredMixin, ListView):
         return context
 
 
-class FichaCadastralDetailJSONView(LoginRequiredMixin, DetailView):
+class FichaCadastralDetailJSONView(StaffRequiredMixin, DetailView):
     """
     View para retornar os dados completos de uma ficha cadastral em JSON.
     Utilizada para carregar detalhes interativamente via AJAX no painel.
@@ -205,7 +231,7 @@ class FichaCadastralDetailJSONView(LoginRequiredMixin, DetailView):
         return JsonResponse(data)
 
 
-class FichaCadastralAtualizarStatusView(LoginRequiredMixin, View):
+class FichaCadastralAtualizarStatusView(StaffRequiredMixin, View):
     """
     View baseada em classe para atualizar o status de uma FichaCadastral
     e registrar qual usuário autenticado realizou a alteração.
@@ -253,7 +279,7 @@ class FichaCadastralAtualizarStatusView(LoginRequiredMixin, View):
             return JsonResponse({"ok": False, "erro": str(e)}, status=500)
 
 
-class FichaCadastralUpdateView(LoginRequiredMixin, View):
+class FichaCadastralUpdateView(StaffRequiredMixin, View):
     """
     View baseada em classe para editar e atualizar as informações
     completas de uma FichaCadastral existente. Registrar qual
@@ -313,7 +339,7 @@ class FichaCadastralUpdateView(LoginRequiredMixin, View):
             return JsonResponse({"ok": False, "erro": str(e)}, status=500)
 
 
-class FichaCadastralAuditoriaListView(LoginRequiredMixin, ListView):
+class FichaCadastralAuditoriaListView(StaffRequiredMixin, ListView):
     """
     View baseada em classe para listar todos os logs de auditoria do sistema.
     Permite controle master e auditoria transparente (Acesso Master).

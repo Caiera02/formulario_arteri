@@ -134,13 +134,27 @@ class FichaCadastralTestCase(TestCase):
         com sucesso.
         """
         usuario = User.objects.create_user(
-            username="corretor", password="senha_secreta"
+            username="corretor", password="senha_secreta", is_staff=True
         )
         self.client.login(username="corretor", password="senha_secreta")
 
         resposta = self.client.get(reverse("fichas:dashboard"))
         self.assertEqual(resposta.status_code, 200)
         self.assertTemplateUsed(resposta, "fichas/dashboard.html")
+
+    def test_view_dashboard_usuario_comum_bloqueado(self):
+        """
+        Garante que um usuário autenticado comum (que não é staff) seja
+        bloqueado (HTTP 403) ao tentar acessar o painel de gerenciamento.
+        """
+        usuario = User.objects.create_user(
+            username="candidato", password="senha_secreta", is_staff=False
+        )
+        self.client.login(username="candidato", password="senha_secreta")
+
+        resposta = self.client.get(reverse("fichas:dashboard"))
+        self.assertEqual(resposta.status_code, 403)
+
 
     def test_view_detalhes_json_logado(self):
         """
@@ -149,7 +163,7 @@ class FichaCadastralTestCase(TestCase):
         """
         ficha = FichaCadastral.objects.create(**self.dados_validos)
         usuario = User.objects.create_user(
-            username="corretor", password="senha_secreta"
+            username="corretor", password="senha_secreta", is_staff=True
         )
         self.client.login(username="corretor", password="senha_secreta")
 
@@ -175,7 +189,7 @@ class FichaCadastralTestCase(TestCase):
         """
         ficha = FichaCadastral.objects.create(**self.dados_validos)
         usuario = User.objects.create_user(
-            username="corretor_auditor", password="senha_secreta"
+            username="corretor_auditor", password="senha_secreta", is_staff=True
         )
         self.client.login(username="corretor_auditor", password="senha_secreta")
 
@@ -232,7 +246,7 @@ class FichaCadastralTestCase(TestCase):
         """
         ficha = FichaCadastral.objects.create(**self.dados_validos)
         usuario = User.objects.create_user(
-            username="corretor_editor", password="senha_secreta"
+            username="corretor_editor", password="senha_secreta", is_staff=True
         )
         self.client.login(username="corretor_editor", password="senha_secreta")
 
@@ -265,12 +279,31 @@ class FichaCadastralTestCase(TestCase):
         de logs de auditoria (Acesso Master).
         """
         usuario = User.objects.create_user(
-            username="corretor_master", password="senha_secreta"
+            username="corretor_master", password="senha_secreta", is_staff=True
         )
         self.client.login(username="corretor_master", password="senha_secreta")
 
         resposta = self.client.get(reverse("fichas:auditoria"))
         self.assertEqual(resposta.status_code, 200)
         self.assertTemplateUsed(resposta, "fichas/auditoria.html")
+
+    def test_logout_get(self):
+        """
+        Garante que a view de logout aceita requisições GET e redireciona
+        corretamente para a tela de login.
+        """
+        resposta = self.client.get(reverse("fichas:logout"))
+        self.assertEqual(resposta.status_code, 302)
+        self.assertIn("/login/", resposta["Location"])
+
+    def test_logout_post(self):
+        """
+        Garante que a view de logout aceita requisições POST e redireciona
+        corretamente para a tela de login.
+        """
+        resposta = self.client.post(reverse("fichas:logout"))
+        self.assertEqual(resposta.status_code, 302)
+        self.assertIn("/login/", resposta["Location"])
+
 
 

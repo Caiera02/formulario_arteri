@@ -124,3 +124,9 @@ WHATSAPP_SECRET_TOKEN = os.getenv('WHATSAPP_SECRET_TOKEN', 'YOUR_SECRET_TOKEN')
 WHATSAPP_SESSION_ID = os.getenv('WHATSAPP_SESSION_ID', 'codeflows')
 WHATSAPP_RECIPIENT = os.getenv('WHATSAPP_RECIPIENT', '5511971498691')
 
+# Configurações de Autenticação e Redirecionamento
+LOGIN_URL = 'fichas:login'
+LOGIN_REDIRECT_URL = 'fichas:dashboard'
+LOGOUT_REDIRECT_URL = 'fichas:login'
+
+
