@@ -1,0 +1,921 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ficha Cadastral - Arteri Imóveis</title>
+    <style>
+        :root {
+            --azul-escuro: #0d2a52;
+            --azul-medio: #16467f;
+            --azul-claro: #2a6fc9;
+            --vermelho: #e23b3b;
+            --vermelho-escuro: #b32626;
+            --cinza-bg: #f4f6fb;
+            --cinza-borda: #d8dee9;
+            --branco: #ffffff;
+            --texto: #1f2a44;
+            --sucesso: #1f9d55;
+            --erro: #e23b3b;
+            --sombra: 0 10px 30px rgba(13, 42, 82, .12);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif
+        }
+
+        body {
+            background: linear-gradient(135deg, #0d2a52 0%, #16467f 60%, #2a6fc9 100%);
+            min-height: 100vh;
+            color: var(--texto);
+            padding: 30px 15px
+        }
+
+        .container {
+            max-width: 980px;
+            margin: 0 auto;
+            background: var(--cinza-bg);
+            border-radius: 18px;
+            box-shadow: var(--sombra);
+            overflow: hidden;
+            animation: fadeUp .6s ease
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0)
+            }
+        }
+
+        .header {
+            background: linear-gradient(120deg, var(--azul-escuro), var(--azul-medio));
+            color: #fff;
+            padding: 30px 35px;
+            position: relative
+        }
+
+        .header::after {
+            content: "";
+            position: absolute;
+            right: -40px;
+            top: -40px;
+            width: 160px;
+            height: 160px;
+            background: var(--vermelho);
+            opacity: .18;
+            border-radius: 50%
+        }
+
+        .header h1 {
+            font-size: 26px;
+            letter-spacing: .5px;
+            display: flex;
+            align-items: center;
+            gap: 12px
+        }
+
+        .header h1 .logo {
+            background: var(--vermelho);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-weight: 800;
+            letter-spacing: 1px
+        }
+
+        .header p {
+            margin-top: 8px;
+            opacity: .85;
+            font-size: 14px
+        }
+
+        .progress-wrap {
+            padding: 20px 35px;
+            background: #fff;
+            border-bottom: 1px solid var(--cinza-borda)
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: #e6eaf2;
+            border-radius: 50px;
+            overflow: hidden
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--vermelho), var(--azul-claro));
+            border-radius: 50px;
+            transition: width .5s ease
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--azul-medio);
+            margin-top: 8px;
+            font-weight: 600
+        }
+
+        .form-body {
+            padding: 30px 35px 60px
+        }
+
+        .section {
+            background: #fff;
+            border-radius: 14px;
+            padding: 25px 28px;
+            margin-bottom: 22px;
+            border: 1px solid var(--cinza-borda);
+            transition: all .3s ease;
+            animation: slideIn .5s ease
+        }
+
+        .section:hover {
+            box-shadow: 0 8px 24px rgba(13, 42, 82, .08);
+            transform: translateY(-2px)
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-15px)
+            }
+
+            to {
+                opacity: 1;
+                transform: translateX(0)
+            }
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 18px;
+            color: var(--azul-escuro);
+            font-weight: 700;
+            margin-bottom: 18px;
+            padding-bottom: 12px;
+            border-bottom: 3px solid var(--vermelho)
+        }
+
+        .section-title .num {
+            background: var(--azul-escuro);
+            color: #fff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            font-weight: 800
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 18px
+        }
+
+        .grid.full {
+            grid-template-columns: 1fr
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px
+        }
+
+        .field.full {
+            grid-column: 1/-1
+        }
+
+        label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--azul-medio)
+        }
+
+        label .req {
+            color: var(--vermelho);
+            margin-left: 3px
+        }
+
+        input,
+        select,
+        textarea {
+            padding: 11px 14px;
+            border: 1.5px solid var(--cinza-borda);
+            border-radius: 8px;
+            font-size: 14px;
+            background: #fbfcfe;
+            transition: all .25s ease;
+            outline: none
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--azul-claro);
+            box-shadow: 0 0 0 3px rgba(42, 111, 201, .15);
+            background: #fff
+        }
+
+        input.invalid,
+        select.invalid {
+            border-color: var(--erro);
+            background: #fff5f5
+        }
+
+        input.valid,
+        select.valid {
+            border-color: var(--sucesso);
+            background: #f0fdf4
+        }
+
+        .error-msg {
+            color: var(--erro);
+            font-size: 11px;
+            display: none;
+            margin-top: 2px
+        }
+
+        .error-msg.show {
+            display: block;
+            animation: shake .3s
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0)
+            }
+
+            25% {
+                transform: translateX(-4px)
+            }
+
+            75% {
+                transform: translateX(4px)
+            }
+        }
+
+        .lgpd-box {
+            background: #eef4ff;
+            border: 1.5px solid var(--azul-claro);
+            border-radius: 10px;
+            padding: 16px;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            margin-top: 10px
+        }
+
+        .lgpd-box input {
+            margin-top: 4px;
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0
+        }
+
+        .lgpd-box p {
+            font-size: 12.5px;
+            color: var(--azul-escuro);
+            line-height: 1.5
+        }
+
+        .lgpd-box a {
+            color: var(--vermelho);
+            font-weight: 600;
+            text-decoration: none
+        }
+
+        .actions {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin-top: 10px
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all .25s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px
+        }
+
+        .btn-primary {
+            background: linear-gradient(120deg, var(--vermelho), var(--vermelho-escuro));
+            color: #fff;
+            box-shadow: 0 6px 18px rgba(226, 59, 59, .35)
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(226, 59, 59, .45)
+        }
+
+        .btn-ghost {
+            background: #fff;
+            color: var(--azul-escuro);
+            border: 1.5px solid var(--cinza-borda)
+        }
+
+        .btn-ghost:hover {
+            background: #f0f4fa;
+            border-color: var(--azul-claro)
+        }
+
+        .floating-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--vermelho), var(--vermelho-escuro));
+            color: #fff;
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(226, 59, 59, .5);
+            z-index: 999;
+            transition: all .3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center
+        }
+
+        .floating-btn:hover {
+            transform: scale(1.1) rotate(10deg)
+        }
+
+        .toast {
+            position: fixed;
+            top: 25px;
+            right: 25px;
+            background: var(--azul-escuro);
+            color: #fff;
+            padding: 16px 22px;
+            border-radius: 10px;
+            box-shadow: var(--sombra);
+            font-size: 14px;
+            opacity: 0;
+            transform: translateX(120%);
+            transition: all .4s ease;
+            z-index: 1000;
+            border-left: 5px solid var(--vermelho)
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(0)
+        }
+
+        .toast.error {
+            border-left-color: var(--vermelho);
+            background: var(--vermelho-escuro)
+        }
+
+        .toast.success {
+            border-left-color: var(--sucesso)
+        }
+
+        @media(max-width:680px) {
+            .grid {
+                grid-template-columns: 1fr
+            }
+
+            .header h1 {
+                font-size: 20px
+            }
+
+            .form-body,
+            .header,
+            .progress-wrap {
+                padding-left: 18px;
+                padding-right: 18px
+            }
+
+            .actions {
+                flex-direction: column-reverse
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center
+            }
+        }
+
+        /* Alerta de Taxa R$ 100 */
+        .taxa-alert {
+            background: linear-gradient(135deg, #fff5f5 0%, #ffe3e3 100%);
+            border: 1.5px solid var(--vermelho);
+            border-left: 6px solid var(--vermelho-escuro);
+            border-radius: 12px;
+            padding: 18px 22px;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 4px 15px rgba(226, 59, 59, 0.1);
+            animation: pulseBorder 2s infinite alternate;
+        }
+
+        @keyframes pulseBorder {
+            0% { border-color: var(--vermelho); }
+            100% { border-color: var(--vermelho-escuro); }
+        }
+
+        .taxa-alert-icon {
+            font-size: 28px;
+            line-height: 1;
+        }
+
+        .taxa-alert-content h3 {
+            color: var(--vermelho-escuro);
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .taxa-alert-content p {
+            color: var(--texto);
+            font-size: 14.5px;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1><span class="logo">ARTERI</span> Imóveis</h1>
+            <p>Ficha Cadastral para Locação - Preencha todos os campos com atenção. Campos com <span
+                    style="color:#ffb3b3">*</span> são obrigatórios.</p>
+        </div>
+
+        <div class="progress-wrap">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-label"><span id="progressText">0% concluído</span><span>4 seções</span></div>
+        </div>
+
+        <form id="fichaForm" class="form-body" novalidate>
+            {% csrf_token %}
+
+            <!-- Aviso de Cobrança da Taxa -->
+            <div class="taxa-alert">
+                <div class="taxa-alert-icon">⚠️</div>
+                <div class="taxa-alert-content">
+                    <h3>Taxa de Consulta Cadastral</h3>
+                    <p>Informamos que é cobrado o valor de <strong>R$ 100,00 (cem reais)</strong> para a consulta e análise detalhada desta ficha. Ao enviar este formulário, você declara estar ciente e de acordo com esta cobrança.</p>
+                </div>
+            </div>
+
+            <!-- SEÇÃO 1 -->
+            <div class="section">
+                <div class="section-title"><span class="num">1</span> Dados Pessoais</div>
+                <div class="grid">
+                    <div class="field full">
+                        <label>Nome Completo <span class="req">*</span></label>
+                        <input type="text" name="nome" required placeholder="Ex: João da Silva">
+                        <span class="error-msg">Informe seu nome completo.</span>
+                    </div>
+                    <div class="field">
+                        <label>CPF <span class="req">*</span></label>
+                        <input type="text" name="cpf" required placeholder="000.000.000-00">
+                        <span class="error-msg">CPF obrigatório.</span>
+                    </div>
+                    <div class="field">
+                        <label>RG <span class="req">*</span></label>
+                        <input type="text" name="rg" required placeholder="00.000.000-0">
+                        <span class="error-msg">RG obrigatório.</span>
+                    </div>
+                    <div class="field">
+                        <label>Data de Nascimento <span class="req">*</span></label>
+                        <input type="date" name="nascimento" required>
+                        <span class="error-msg">Informe a data.</span>
+                    </div>
+                    <div class="field">
+                        <label>Estado Civil <span class="req">*</span></label>
+                        <select name="estado_civil" required>
+                            <option value="">Selecione...</option>
+                            <option>Solteiro(a)</option>
+                            <option>Casado(a)</option>
+                            <option>Divorciado(a)</option>
+                            <option>Viúvo(a)</option>
+                            <option>União Estável</option>
+                        </select>
+                        <span class="error-msg">Selecione o estado civil.</span>
+                    </div>
+                    <div class="field">
+                        <label>Telefone <span class="req">*</span></label>
+                        <input type="tel" name="telefone" required placeholder="(00) 0000-0000">
+                        <span class="error-msg">Telefone obrigatório.</span>
+                    </div>
+                    <div class="field">
+                        <label>Celular / WhatsApp <span class="req">*</span></label>
+                        <input type="tel" name="celular" required placeholder="(00) 90000-0000">
+                        <span class="error-msg">Celular obrigatório.</span>
+                    </div>
+                    <div class="field full">
+                        <label>E-mail <span class="req">*</span></label>
+                        <input type="email" name="email" required placeholder="seu@email.com">
+                        <span class="error-msg">E-mail inválido.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEÇÃO 2 -->
+            <div class="section">
+                <div class="section-title"><span class="num">2</span> Dados Profissionais e Residencia Altual</div>
+                <div class="grid">
+                    <div class="field">
+                        <label>Profissão <span class="req">*</span></label>
+                        <input type="text" name="profissao" required placeholder="Ex: Analista de Sistemas">
+                        <span class="error-msg">Profissão obrigatória.</span>
+                    </div>
+                    <div class="field">
+                        <label>Empresa <span class="req">*</span></label>
+                        <input type="text" name="empresa" required placeholder="Nome da empresa">
+                        <span class="error-msg">Informe a empresa.</span>
+                    </div>
+                    <div class="field">
+                        <label>Renda Mensal R$ <span class="req">*</span></label>
+                        <input type="number" name="renda" required min="0" step="0.01" placeholder="0.00">
+                        <span class="error-msg">Informe a renda.</span>
+                    </div>
+                    <div class="field">
+                        <label>Tempo de Emprego</label>
+                        <input type="text" name="tempo_emprego" placeholder="Ex: 2 anos">
+                    </div>
+                    <!-- ENDERECO -->
+                    <div class="field">
+                        <label>CEP <span class="req">*</span></label>
+                        <input type="text" name="cep" id="cep" onchange="BuscaCep()" required placeholder="00000-000">
+                        <span class="error-msg">CEP obrigatório.</span>
+                    </div>
+                    <div class="field ">
+                        <label>Cidade<span class="req">*</span></label>
+                        <input type="text" name="cidade" id="cidade" required placeholder="cidade">
+                        <span class="error-msg">Endereço obrigatório.</span>
+                    </div>
+                    <div class="field full">
+                        <label>Endereço<span class="req">*</span></label>
+                        <input type="text" name="rua" id="rua" required placeholder="Rua">
+                        <span class="error-msg">Endereço obrigatório.</span>
+                    </div>
+                    <div class="field ">
+                        <label>Bairro<span class="req">*</span></label>
+                        <input type="text" name="bairro" id="bairro" required placeholder="bairro">
+                        <span class="error-msg">Endereço obrigatório.</span>
+                    </div>
+                    <div class="field ">
+                        <label>Numero<span class="req">*</span></label>
+                        <input type="text" name="numero" id="numero" required placeholder="numero">
+                        <span class="error-msg">Endereço obrigatório.</span>
+                    </div>
+                    <div class="field full">
+                        <label>Tempo de Residência</label>
+                        <input type="text" name="tempo_residencia" placeholder="Ex: 1 ano">
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- SEÇÃO 3 -->
+            <div class="section">
+                <div class="section-title"><span class="num">3</span> Imóvel Pretendido e Garantias</div>
+                <div class="grid">
+                    <div class="field full">
+                        <label>Endereço do Imóvel</label>
+                        <input type="text" name="imovel_endereco"
+                            placeholder="Endereço completo do imóvel pretendido">
+                        <span class="error-msg">Informe o endereço do imóvel.</span>
+                    </div>
+                    <div class="field full">
+                        <label>Proprietário</label>
+                        <input type="text" name="imovel_proprietario"
+                            placeholder="Nome do proprietário do imóvel">
+                        <span class="error-msg">Informe o proprietário.</span>
+                    </div>
+                    <div class="field">
+                        <label>Aluguel R$</label>
+                        <input type="number" name="imovel_aluguel" min="0" step="0.01" placeholder="0.00">
+                        <span class="error-msg">Informe o valor do aluguel.</span>
+                    </div>
+                    <div class="field">
+                        <label>Condomínio R$</label>
+                        <input type="number" name="imovel_condominio" min="0" step="0.01" placeholder="0.00">
+                    </div>
+                    <div class="field">
+                        <label>IPTU R$</label>
+                        <input type="number" name="imovel_iptu" min="0" step="0.01" placeholder="0.00">
+                    </div>
+                    <div class="field">
+                        <label>Quantas pessoas irão residir</label>
+                        <input type="number" name="imovel_residentes" min="1" placeholder="Ex: 3">
+                        <span class="error-msg">Informe a quantidade de residentes.</span>
+                    </div>
+                    <div class="field full">
+                        <label>Tipo de Garantia</label>
+                        <select name="garantia_tipo">
+                            <option value="">Selecione o tipo de garantia...</option>
+                            <option value="Fiador">Fiador</option>
+                            <option value="Caução">Caução</option>
+                            <option value="Seguro Fiança">Seguro Fiança</option>
+                            <option value="Título de Capitalização">Título de Capitalização</option>
+                            <option value="Depósito de 3 meses">Depósito de 3 meses</option>
+                        </select>
+                        <span class="error-msg">Selecione o tipo de garantia.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEÇÃO 4 -->
+            <div class="section">
+                <div class="section-title"><span class="num">4</span> Referências Pessoais e LGPD</div>
+                <div class="grid">
+                    <div class="field">
+                        <label>Referência 1 - Nome</label>
+                        <input type="text" name="ref1_nome" placeholder="Nome completo">
+                    </div>
+                    <div class="field">
+                        <label>Referência 1 - Telefone</label>
+                        <input type="tel" name="ref1_telefone" placeholder="(00) 0000-0000">
+                    </div>
+                    <div class="field">
+                        <label>Referência 2 - Nome</label>
+                        <input type="text" name="ref2_nome" placeholder="Nome completo">
+                    </div>
+                    <div class="field">
+                        <label>Referência 2 - Telefone</label>
+                        <input type="tel" name="ref2_telefone" placeholder="(00) 0000-0000">
+                    </div>
+                    <div class="field full">
+                        <label>Observações</label>
+                        <textarea name="observacoes" rows="3"
+                            placeholder="Informações adicionais relevantes"></textarea>
+                    </div>
+                    <div class="field full">
+                        <div class="lgpd-box">
+                            <input type="checkbox" name="lgpd_consent" id="lgpd" required>
+                            <p>Autorizo a <strong>Arteri Imóveis</strong> a coletar, armazenar e tratar meus dados
+                                pessoais conforme a <a href="#">Lei Geral de Proteção de Dados (LGPD - Lei
+                                    13.709/2018)</a>, exclusivamente para fins de análise cadastral e locação. <span
+                                    class="req">*</span></p>
+                        </div>
+                        <span class="error-msg">É necessário aceitar a LGPD para continuar.</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="actions">
+                <button type="reset" class="btn btn-ghost">↺ Limpar Formulário</button>
+                <button type="submit" class="btn btn-primary">✓ Enviar Ficha Cadastral</button>
+            </div>
+        </form>
+    </div>
+
+    <button class="floating-btn" id="floatBtn" title="Ir ao topo">↑</button>
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const form = document.getElementById('fichaForm');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const toast = document.getElementById('toast');
+        const floatBtn = document.getElementById('floatBtn');
+
+        function showToast(msg, type = 'success') {
+            toast.textContent = msg;
+            toast.className = 'toast show ' + type;
+            setTimeout(() => toast.className = 'toast', 3500);
+        }
+
+        function updateProgress() {
+            const requireds = form.querySelectorAll('[required]');
+            let filled = 0;
+            requireds.forEach(f => { if (f.type === 'checkbox' && f.checked) filled++; else if (f.value.trim()) filled++; });
+            const pct = Math.round((filled / requireds.length) * 100);
+            progressFill.style.width = pct + '%';
+            progressText.textContent = pct + '% concluído';
+        }
+
+        function validateField(field) {
+            const err = field.parentElement.querySelector('.error-msg');
+            let ok = true;
+            if (field.type === 'checkbox') {
+                ok = field.checked;
+            } else if (field.hasAttribute('required')) {
+                ok = field.value.trim() !== '';
+                if (ok && field.type === 'email') {
+                    ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(field.value);
+                }
+            }
+            if (field.hasAttribute('required')) {
+                if (ok) { field.classList.remove('invalid'); field.classList.add('valid'); if (err) err.classList.remove('show'); }
+                else { field.classList.remove('valid'); field.classList.add('invalid'); if (err) err.classList.add('show'); }
+            }
+            return ok;
+        }
+
+        form.addEventListener('input', e => { if (e.target.hasAttribute('required') || e.target.type === 'checkbox') { validateField(e.target); updateProgress(); } });
+        form.addEventListener('change', e => { if (e.target.hasAttribute('required') || e.target.type === 'checkbox') { validateField(e.target); updateProgress(); } });
+
+        form.addEventListener('submit', e => {
+            e.preventDefault();
+            let valid = true;
+            form.querySelectorAll('[required]').forEach(f => { if (!validateField(f)) valid = false; });
+            updateProgress();
+            if (!valid) { showToast('Preencha todos os campos obrigatórios.', 'error'); return; }
+
+            // Submissão via AJAX para o Django
+            const formData = new FormData(form);
+            const btnSubmit = form.querySelector('button[type="submit"]');
+            const originalText = btnSubmit.innerHTML;
+
+            btnSubmit.disabled = true;
+            btnSubmit.innerHTML = '⌛ Enviando...';
+
+            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            fetch('', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => { throw err; });
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.ok) {
+                    showToast('Ficha cadastrada com sucesso! Em breve entraremos em contato.', 'success');
+                    form.reset();
+                } else {
+                    showToast(data.erro || 'Erro ao enviar a ficha.', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Erro na requisição:', error);
+                const msg = error && error.erro ? error.erro : 'Erro ao enviar a ficha cadastral.';
+                showToast(msg, 'error');
+            })
+            .finally(() => {
+                btnSubmit.disabled = false;
+                btnSubmit.innerHTML = originalText;
+            });
+        });
+
+        form.addEventListener('reset', () => {
+            form.querySelectorAll('.valid,.invalid').forEach(f => { f.classList.remove('valid', 'invalid'); });
+            form.querySelectorAll('.error-msg.show').forEach(m => m.classList.remove('show'));
+            setTimeout(updateProgress, 50);
+        });
+
+        floatBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+        window.addEventListener('scroll', () => {
+            floatBtn.style.opacity = window.scrollY > 300 ? '1' : '0.6';
+        });
+
+        updateProgress();
+    </script>
+    <script src="{% static 'fichas/cep.js' %}"></script>
+    <!--
+============================================================
+BACKEND DJANGO (referência) - models.py / views.py / urls.py
+============================================================
+
+# models.py
+from django.db import models
+
+class FichaCadastral(models.Model):
+    # Seção 1
+    nome = models.CharField(max_length=120)
+    cpf = models.CharField(max_length=20)
+    rg = models.CharField(max_length=20)
+    nascimento = models.DateField()
+    estado_civil = models.CharField(max_length=30)
+    telefone = models.CharField(max_length=20)
+    celular = models.CharField(max_length=20)
+    email = models.EmailField()
+    # Seção 2
+    profissao = models.CharField(max_length=80)
+    empresa = models.CharField(max_length=120)
+    renda = models.DecimalField(max_digits=10, decimal_places=2)
+    tempo_emprego = models.CharField(max_length=40, blank=True)
+    endereco_atual = models.CharField(max_length=200)
+    cep = models.CharField(max_length=10)
+    tempo_residencia = models.CharField(max_length=40, blank=True)
+    # Seção 3
+    imovel_endereco = models.CharField(max_length=200)
+    imovel_proprietario = models.CharField(max_length=120)
+    imovel_aluguel = models.DecimalField(max_digits=10, decimal_places=2)
+    imovel_condominio = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    imovel_iptu = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    imovel_residentes = models.PositiveIntegerField()
+    garantia_tipo = models.CharField(max_length=40, choices=[
+        ('Fiador','Fiador'),('Caução','Caução'),('Seguro Fiança','Seguro Fiança'),
+        ('Título de Capitalização','Título de Capitalização'),('Depósito de 3 meses','Depósito de 3 meses')
+    ])
+    # Seção 4
+    ref1_nome = models.CharField(max_length=120, blank=True)
+    ref1_telefone = models.CharField(max_length=20, blank=True)
+    ref2_nome = models.CharField(max_length=120, blank=True)
+    ref2_telefone = models.CharField(max_length=20, blank=True)
+    observacoes = models.TextField(blank=True)
+    lgpd_consent = models.BooleanField(default=False)
+    criado_em = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'{self.nome} - {self.cpf}'
+
+# views.py
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+from .models import FichaCadastral
+
+@csrf_exempt
+def salvar_ficha(request):
+    if request.method == 'POST':
+        required = ['nome','cpf','rg','nascimento','estado_civil','telefone','celular','email',
+                    'profissao','empresa','renda','endereco_atual','cep',
+                    'imovel_endereco','imovel_proprietario','imovel_aluguel',
+                    'imovel_residentes','garantia_tipo','lgpd_consent']
+        for campo in required:
+            if not request.POST.get(campo):
+                return JsonResponse({'ok':False,'erro':f'Campo obrigatório ausente: {campo}'}, status=400)
+        ficha = FichaCadastral.objects.create(
+            nome=request.POST['nome'],
+            cpf=request.POST['cpf'],
+            rg=request.POST['rg'],
+            nascimento=request.POST['nascimento'],
+            estado_civil=request.POST['estado_civil'],
+            telefone=request.POST['telefone'],
+            celular=request.POST['celular'],
+            email=request.POST['email'],
+            profissao=request.POST['profissao'],
+            empresa=request.POST['empresa'],
+            renda=request.POST['renda'],
+            tempo_emprego=request.POST.get('tempo_emprego',''),
+            endereco_atual=request.POST['endereco_atual'],
+            cep=request.POST['cep'],
+            tempo_residencia=request.POST.get('tempo_residencia',''),
+            imovel_endereco=request.POST['imovel_endereco'],
+            imovel_proprietario=request.POST['imovel_proprietario'],
+            imovel_aluguel=request.POST['imovel_aluguel'],
+            imovel_condominio=request.POST.get('imovel_condominio') or None,
+            imovel_iptu=request.POST.get('imovel_iptu') or None,
+            imovel_residentes=request.POST['imovel_residentes'],
+            garantia_tipo=request.POST['garantia_tipo'],
+            ref1_nome=request.POST.get('ref1_nome',''),
+            ref1_telefone=request.POST.get('ref1_telefone',''),
+            ref2_nome=request.POST.get('ref2_nome',''),
+            ref2_telefone=request.POST.get('ref2_telefone',''),
+            observacoes=request.POST.get('observacoes',''),
+            lgpd_consent=request.POST.get('lgpd_consent')=='on',
+        )
+        return JsonResponse({'ok':True,'id':ficha.id})
+    return JsonResponse({'ok':False,'erro':'Método não permitido'}, status=405)
+
+# urls.py
+from django.urls import path
+from . import views
+urlpatterns = [
+    path('ficha/salvar/', views.salvar_ficha, name='salvar_ficha'),
+]
+-->
+</body>
+
+</html>

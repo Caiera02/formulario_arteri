@@ -1,0 +1,260 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histórico de Auditoria - Arteri Imóveis</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --azul-escuro: #0d2a52;
+            --azul-medio: #16467f;
+            --azul-claro: #2a6fc9;
+            --vermelho: #e23b3b;
+            --vermelho-escuro: #b32626;
+            --cinza-bg: #f8fafc;
+            --cinza-borda: #e2e8f0;
+            --branco: #ffffff;
+            --texto: #1e293b;
+            --texto-suave: #64748b;
+            --sombra: 0 4px 20px rgba(13, 42, 82, 0.05);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--cinza-bg);
+            color: var(--texto);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Header */
+        .navbar {
+            background: linear-gradient(135deg, var(--azul-escuro) 0%, var(--azul-medio) 100%);
+            color: var(--branco);
+            padding: 18px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(13, 42, 82, 0.15);
+        }
+
+        .navbar h1 {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .navbar h1 .logo {
+            background: var(--vermelho);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-weight: 800;
+            font-size: 18px;
+        }
+
+        .user-menu {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .btn-back {
+            background: rgba(255, 255, 255, 0.15);
+            color: var(--branco);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13.5px;
+            font-weight: 600;
+            transition: all 0.25s ease;
+        }
+
+        .btn-back:hover {
+            background: var(--branco);
+            color: var(--azul-escuro);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 40px 20px;
+            flex-grow: 1;
+        }
+
+        .content-card {
+            background: var(--branco);
+            border: 1px solid var(--cinza-borda);
+            border-radius: 16px;
+            box-shadow: var(--sombra);
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .card-header {
+            padding: 24px 30px;
+            border-bottom: 1px solid var(--cinza-borda);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-header h2 {
+            font-size: 18px;
+            color: var(--azul-escuro);
+            font-weight: 700;
+        }
+
+        /* Tabela Auditoria */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 14px;
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: var(--texto-suave);
+            font-weight: 600;
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--cinza-borda);
+            text-transform: uppercase;
+            font-size: 11.5px;
+            letter-spacing: 0.5px;
+        }
+
+        td {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--cinza-borda);
+            vertical-align: top;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .user-col {
+            font-weight: 700;
+            color: var(--azul-claro);
+        }
+
+        .action-text {
+            font-weight: 600;
+            color: var(--texto);
+        }
+
+        .details-text {
+            color: var(--texto-suave);
+            font-size: 13px;
+            margin-top: 4px;
+            line-height: 1.4;
+            font-style: italic;
+        }
+
+        .date-col {
+            color: var(--texto-suave);
+            white-space: nowrap;
+        }
+
+        /* Empty State */
+        .empty-state {
+            padding: 60px 40px;
+            text-align: center;
+            color: var(--texto-suave);
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .empty-state h3 {
+            font-size: 18px;
+            color: var(--azul-escuro);
+            margin-bottom: 6px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="navbar">
+        <h1><span class="logo">ARTERI</span> Imóveis | Auditoria</h1>
+        <div class="user-menu">
+            <a href="{% url 'fichas:dashboard' %}" class="btn-back">⬅ Voltar ao Painel</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="content-card">
+            <div class="card-header">
+                <h2>Histórico de Auditoria do Sistema (Acesso Master)</h2>
+            </div>
+
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Usuário</th>
+                            <th>Ação Executada</th>
+                            <th>Data / Hora</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for log in logs %}
+                        <tr>
+                            <td class="user-col">
+                                {% if log.usuario %}
+                                    👤 {{ log.usuario.username }}
+                                {% else %}
+                                    🌐 Candidato / Externo
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="action-text">{{ log.acao }}</div>
+                                {% if log.detalhes %}
+                                    <div class="details-text">{{ log.detalhes }}</div>
+                                {% endif %}
+                            </td>
+                            <td class="date-col">{{ log.criado_em|date:"d/m/Y H:i:s" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3">
+                                <div class="empty-state">
+                                    <div class="empty-state-icon">📭</div>
+                                    <h3>Nenhum registro de auditoria</h3>
+                                    <p>O sistema ainda não registrou eventos de auditoria.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
