@@ -581,7 +581,7 @@
     <div class="navbar">
         <h1><span class="logo">ARTERI</span> Imóveis | Painel</h1>
         <div class="user-menu">
-            {% if user.is_superuser or user.is_staff %}
+            {% if user.is_superuser %}
             <a href="{% url 'fichas:auditoria' %}" class="btn-logout" style="background: rgba(255, 255, 255, 0.1); margin-right: 10px;">📜 Auditoria Master</a>
             {% endif %}
             <div class="user-info" style="margin-right: 15px;">

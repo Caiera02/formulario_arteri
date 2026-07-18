@@ -273,19 +273,32 @@ class FichaCadastralTestCase(TestCase):
         from .models import LogAuditoria
         self.assertTrue(LogAuditoria.objects.filter(usuario=usuario).exists())
 
-    def test_auditoria_logs_restrito(self):
+    def test_auditoria_logs_restrito_superuser(self):
         """
-        Garante que corretores autenticados conseguem acessar a view
-        de logs de auditoria (Acesso Master).
+        Garante que superusuários conseguem acessar a view de logs de auditoria.
         """
-        usuario = User.objects.create_user(
-            username="corretor_master", password="senha_secreta", is_staff=True
+        usuario = User.objects.create_superuser(
+            username="admin_master", password="senha_secreta"
         )
-        self.client.login(username="corretor_master", password="senha_secreta")
+        self.client.login(username="admin_master", password="senha_secreta")
 
         resposta = self.client.get(reverse("fichas:auditoria"))
         self.assertEqual(resposta.status_code, 200)
         self.assertTemplateUsed(resposta, "fichas/auditoria.html")
+
+    def test_auditoria_logs_bloqueia_staff_comum(self):
+        """
+        Garante que corretores comuns (staff comum, não superusuário) sejam
+        bloqueados (HTTP 403) de acessar os logs de auditoria.
+        """
+        usuario = User.objects.create_user(
+            username="corretor_comum", password="senha_secreta", is_staff=True
+        )
+        self.client.login(username="corretor_comum", password="senha_secreta")
+
+        resposta = self.client.get(reverse("fichas:auditoria"))
+        self.assertEqual(resposta.status_code, 403)
+
 
     def test_logout_get(self):
         """

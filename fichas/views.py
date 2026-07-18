@@ -23,6 +23,20 @@ class StaffRequiredMixin(UserPassesTestMixin):
         )
 
 
+class SuperuserRequiredMixin(UserPassesTestMixin):
+    """
+    Mixin para garantir que apenas superusuários tenham acesso à view.
+    """
+    login_url = "fichas:login"
+
+    def test_func(self):
+        return (
+            self.request.user.is_authenticated 
+            and self.request.user.is_superuser
+        )
+
+
+
 
 class FichaCadastralView(View):
     """
@@ -339,7 +353,7 @@ class FichaCadastralUpdateView(StaffRequiredMixin, View):
             return JsonResponse({"ok": False, "erro": str(e)}, status=500)
 
 
-class FichaCadastralAuditoriaListView(StaffRequiredMixin, ListView):
+class FichaCadastralAuditoriaListView(SuperuserRequiredMixin, ListView):
     """
     View baseada em classe para listar todos os logs de auditoria do sistema.
     Permite controle master e auditoria transparente (Acesso Master).
