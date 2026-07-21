@@ -14,7 +14,7 @@ class FichaCadastralTestCase(TestCase):
     def setUp(self):
         self.dados_validos = {
             "nome": "João da Silva",
-            "cpf": "123.456.789-00",
+            "cpf": "123.456.789-09",
             "rg": "12.345.678-9",
             "nascimento": "1990-05-15",
             "estado_civil": "Solteiro(a)",
@@ -52,7 +52,7 @@ class FichaCadastralTestCase(TestCase):
         """
         ficha = FichaCadastral.objects.create(**self.dados_validos)
         self.assertEqual(ficha.nome, "João da Silva")
-        self.assertEqual(ficha.cpf, "123.456.789-00")
+        self.assertEqual(ficha.cpf, "123.456.789-09")
         self.assertTrue(ficha.lgpd_consent)
         self.assertIsNotNone(ficha.criado_em)
 
@@ -173,7 +173,7 @@ class FichaCadastralTestCase(TestCase):
         self.assertEqual(resposta.status_code, 200)
         dados_json = resposta.json()
         self.assertEqual(dados_json["nome"], "João da Silva")
-        self.assertEqual(dados_json["cpf"], "123.456.789-00")
+        self.assertEqual(dados_json["cpf"], "123.456.789-09")
 
     def test_status_padrao_novo(self):
         """
@@ -317,6 +317,103 @@ class FichaCadastralTestCase(TestCase):
         resposta = self.client.post(reverse("fichas:logout"))
         self.assertEqual(resposta.status_code, 302)
         self.assertIn("/login/", resposta["Location"])
+
+    def test_validacao_cpf_valido(self):
+        """
+        Garante que o formulário aceita CPFs válidos (com e sem formatação).
+        """
+        # Testando CPF formatado válido
+        dados = self.dados_validos.copy()
+        dados["cpf"] = "123.456.789-09"
+        form = FichaCadastralForm(data=dados)
+        self.assertTrue(form.is_valid())
+
+        # Testando CPF apenas com números válido
+        dados_apenas_num = self.dados_validos.copy()
+        dados_apenas_num["cpf"] = "12345678909"
+        form = FichaCadastralForm(data=dados_apenas_num)
+        self.assertTrue(form.is_valid())
+        # Garante que salva formatado corretamente
+        ficha = form.save()
+        self.assertEqual(ficha.cpf, "123.456.789-09")
+
+    def test_validacao_cpf_invalido(self):
+        """
+        Garante que o formulário rejeita CPFs inválidos.
+        """
+        # CPF com dígitos verificadores incorretos
+        dados = self.dados_validos.copy()
+        dados["cpf"] = "123.456.789-00"
+        form = FichaCadastralForm(data=dados)
+        self.assertFalse(form.is_valid())
+        self.assertIn("cpf", form.errors)
+
+        # CPF com todos os números iguais
+        dados["cpf"] = "111.111.111-11"
+        form = FichaCadastralForm(data=dados)
+        self.assertFalse(form.is_valid())
+        self.assertIn("cpf", form.errors)
+
+        # CPF com tamanho inválido
+        dados["cpf"] = "123.456.789-0"
+        form = FichaCadastralForm(data=dados)
+        self.assertFalse(form.is_valid())
+        self.assertIn("cpf", form.errors)
+
+    def test_busca_ficha_via_post_e_sessao(self):
+        """
+        Garante que a busca de fichas pode ser submetida via POST, salva o termo na
+        sessão, limpa parâmetros da URL e filtra os dados corretamente.
+        """
+        # Cria fichas para testar a busca
+        FichaCadastral.objects.create(**self.dados_validos)  # João da Silva, 123.456.789-09
+        
+        dados_maria = self.dados_validos.copy()
+        dados_maria["nome"] = "Maria de Souza"
+        dados_maria["cpf"] = "987.654.321-00"  # Obs: esse cpf dummy será aceito se não validarmos no models.create (objects.create pula a validação de form. clean)
+        # Vamos usar um CPF válido para Maria para consistência se criarmos via form:
+        # 987.654.321-00 não é válido. CPF válido seria 987.654.321-00 ?
+        # Digits: 9*10 + 8*9 + 7*8 + 6*7 + 5*6 + 4*5 + 3*4 + 2*3 + 1*2 = 90 + 72 + 56 + 42 + 30 + 20 + 12 + 6 + 2 = 330. 
+        # (330*10)%11 = 3300 % 11 = 0. So first digit is 0. 
+        # Second digit for 9876543210: 9*11 + 8*10 + 7*9 + 6*8 + 5*7 + 4*6 + 3*5 + 2*4 + 1*3 + 0*2 = 99 + 80 + 63 + 48 + 35 + 24 + 15 + 8 + 3 = 375.
+        # (375*10)%11 = 3750 % 11 = 10 -> 0.
+        # So 987.654.321-00 is indeed a valid CPF! Great.
+        FichaCadastral.objects.create(**dados_maria)
+
+        # Autentica corretor
+        usuario = User.objects.create_user(
+            username="corretor_busca", password="senha_secreta", is_staff=True
+        )
+        self.client.login(username="corretor_busca", password="senha_secreta")
+
+        # 1. Envia POST de busca
+        resposta_post = self.client.post(
+            reverse("fichas:dashboard"),
+            data={"busca": "João"}
+        )
+        # Deve redirecionar (POST -> GET redirect)
+        self.assertEqual(resposta_post.status_code, 302)
+        self.assertEqual(self.client.session["busca_ficha"], "João")
+
+        # 2. Acessa página redirecionada (clean GET)
+        resposta_get = self.client.get(reverse("fichas:dashboard"))
+        self.assertEqual(resposta_get.status_code, 200)
+        self.assertContains(resposta_get, "João da Silva")
+        self.assertNotContains(resposta_get, "Maria de Souza")
+
+        # 3. Limpa a busca
+        resposta_limpar = self.client.post(
+            reverse("fichas:dashboard"),
+            data={"limpar": "1"}
+        )
+        self.assertEqual(resposta_limpar.status_code, 302)
+        self.assertNotIn("busca_ficha", self.client.session)
+
+        # 4. Verifica que lista voltou ao normal
+        resposta_get_limpo = self.client.get(reverse("fichas:dashboard"))
+        self.assertContains(resposta_get_limpo, "João da Silva")
+        self.assertContains(resposta_get_limpo, "Maria de Souza")
+
 
 
 

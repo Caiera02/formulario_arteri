@@ -118,19 +118,44 @@ class FichaCadastralListView(StaffRequiredMixin, ListView):
     context_object_name = "fichas"
     login_url = "fichas:login"  # Redireciona para a nova tela de login local
 
+    def post(self, request, *args, **kwargs):
+        """
+        Processa busca via POST para manter a URL limpa de dados sensíveis (PII).
+        Salva o termo de busca na sessão do usuário.
+        """
+        if "limpar" in request.POST:
+            if "busca_ficha" in request.session:
+                del request.session["busca_ficha"]
+        else:
+            busca = request.POST.get("busca", "").strip()
+            if busca:
+                request.session["busca_ficha"] = busca
+            elif "busca_ficha" in request.session:
+                del request.session["busca_ficha"]
+        return redirect("fichas:dashboard")
+
     def get_queryset(self):
         """
-        Permite buscar fichas pelo nome ou CPF se informado na query.
+        Permite buscar fichas filtrando pelo termo salvo na sessão.
+        Sanitiza o input para garantir segurança contra qualquer injeção indesejada.
         """
         queryset = super().get_queryset()
-        busca = self.request.GET.get("busca")
+        busca = self.request.session.get("busca_ficha")
         if busca:
-            queryset = queryset.filter(
-                nome__icontains=busca
-            ) | queryset.filter(
-                cpf__contains=busca
-            )
+            import re
+            # Sanitiza a busca para aceitar apenas letras, números, espaços, pontos e traços
+            busca_sanitizada = re.sub(r"[^\w\s.-]", "", busca).strip()
+            if busca_sanitizada:
+                queryset = queryset.filter(
+                    nome__icontains=busca_sanitizada
+                ) | queryset.filter(
+                    cpf__contains=busca_sanitizada
+                )
+            else:
+                # Se após sanitização o input for nulo/vazio, não traz resultados filtrados
+                queryset = queryset.none()
         return queryset
+
 
     def get_context_data(self, **kwargs):
         """

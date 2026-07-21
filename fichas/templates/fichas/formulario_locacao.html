@@ -729,6 +729,31 @@
             progressText.textContent = pct + '% concluído';
         }
 
+        function validarCPFJS(cpf) {
+            cpf = cpf.replace(/[^\d]+/g, '');
+            if (cpf.length !== 11) return false;
+            if (/^(\d)\1{10}$/.test(cpf)) return false;
+            
+            let soma = 0;
+            let resto;
+            for (let i = 1; i <= 9; i++) {
+                soma = soma + parseInt(cpf.substring(i - 1, i)) * (11 - i);
+            }
+            resto = (soma * 10) % 11;
+            if ((resto === 10) || (resto === 11)) resto = 0;
+            if (resto !== parseInt(cpf.substring(9, 10))) return false;
+            
+            soma = 0;
+            for (let i = 1; i <= 10; i++) {
+                soma = soma + parseInt(cpf.substring(i - 1, i)) * (12 - i);
+            }
+            resto = (soma * 10) % 11;
+            if ((resto === 10) || (resto === 11)) resto = 0;
+            if (resto !== parseInt(cpf.substring(10, 11))) return false;
+            
+            return true;
+        }
+
         function validateField(field) {
             const err = field.parentElement.querySelector('.error-msg');
             let ok = true;
@@ -736,8 +761,20 @@
                 ok = field.checked;
             } else if (field.hasAttribute('required')) {
                 ok = field.value.trim() !== '';
-                if (ok && field.type === 'email') {
-                    ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(field.value);
+                if (ok) {
+                    if (field.type === 'email') {
+                        ok = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(field.value);
+                        if (!ok && err) err.textContent = 'E-mail inválido.';
+                    } else if (field.name === 'cpf') {
+                        ok = validarCPFJS(field.value);
+                        if (!ok && err) err.textContent = 'CPF inválido.';
+                    }
+                } else {
+                    if (err) {
+                        if (field.name === 'cpf') err.textContent = 'CPF obrigatório.';
+                        else if (field.type === 'email') err.textContent = 'E-mail obrigatório.';
+                        else err.textContent = field.getAttribute('placeholder') ? `${field.previousElementSibling.textContent.replace('*', '').trim()} obrigatório.` : 'Campo obrigatório.';
+                    }
                 }
             }
             if (field.hasAttribute('required')) {
@@ -745,6 +782,23 @@
                 else { field.classList.remove('valid'); field.classList.add('invalid'); if (err) err.classList.add('show'); }
             }
             return ok;
+        }
+
+        // Aplicar máscara de CPF dinâmica
+        const cpfInput = form.querySelector('input[name="cpf"]');
+        if (cpfInput) {
+            cpfInput.addEventListener('input', e => {
+                let v = e.target.value.replace(/\D/g, '');
+                if (v.length > 11) v = v.substring(0, 11);
+                if (v.length > 9) {
+                    v = v.replace(/^(\d{3})(\d{3})(\d{3})(\d{1,2})$/, "$1.$2.$3-$4");
+                } else if (v.length > 6) {
+                    v = v.replace(/^(\d{3})(\d{3})(\d{1,3})$/, "$1.$2.$3");
+                } else if (v.length > 3) {
+                    v = v.replace(/^(\d{3})(\d{1,3})$/, "$1.$2");
+                }
+                e.target.value = v;
+            });
         }
 
         form.addEventListener('input', e => { if (e.target.hasAttribute('required') || e.target.type === 'checkbox') { validateField(e.target); updateProgress(); } });
